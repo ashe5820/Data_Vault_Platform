@@ -1,0 +1,40 @@
+DIGITAL ASSET OWNERSHIP DEED
+
+This Ownership Deed ("Deed") is executed on {{creationDate as "DD MMMM YYYY"}} 
+
+WHEREAS, {{owner}} ("Owner") is the creator and rightful owner of the digital asset identified below:
+
+Asset Details:
+- Asset ID: {{assetId}}
+- Asset Name: {{assetName}}
+- Asset Type: {{assetType}}
+- IPFS Hash: {{ipfsHash}}
+- Description: {{assetDescription}}
+
+NOW, THEREFORE, the Owner hereby declares and affirms:
+
+1. OWNERSHIP DECLARATION
+The Owner holds complete and exclusive ownership rights to the above-described digital asset.
+
+2. JURISDICTION
+This Deed shall be governed by the laws of {{jurisdiction}}.
+
+3. INTELLECTUAL PROPERTY RIGHTS
+The Owner retains all intellectual property rights including but not limited to:
+- Copyright
+- Distribution rights
+- Reproduction rights
+- Derivative work rights
+- Public display rights
+
+4. TERMS AND CONDITIONS
+{{#ulist termsAndConditions}}
+{{.}}
+{{/ulist}}
+
+5. BLOCKCHAIN NOTARIZATION
+This Deed has been notarized and recorded on the Ethereum blockchain for immutable verification.
+
+DIGITAL SIGNATURE:
+Owner: {{owner}}
+Date: {{creationDate}}

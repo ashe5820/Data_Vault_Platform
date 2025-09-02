@@ -1,0 +1,28 @@
+namespace org.accordproject.ownership
+
+import org.accordproject.cicero.contract.*
+import org.accordproject.cicero.runtime.*
+
+contract OwnershipDeed over OwnershipDeedContract {
+  
+  clause verifyOwnership(request : VerifyOwnership) : OwnershipVerified {
+    return OwnershipVerified{
+      assetId: contract.assetId,
+      owner: contract.owner,
+      isValid: true
+    }
+  }
+  
+  clause transferOwnership(request : TransferOwnership) : OwnershipTransferred {
+    // Logic to validate transfer conditions
+    enforce request.newOwner != contract.owner
+    else throw failure("Cannot transfer to same owner");
+    
+    return OwnershipTransferred{
+      assetId: contract.assetId,
+      previousOwner: contract.owner,
+      newOwner: request.newOwner,
+      transferDate: request.transferDate
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+    "name": "license-agreement",
+    "displayName": "Digital Asset License Agreement",
+    "version": "1.0.0",
+    "description": "A template for licensing digital assets with customizable terms",
+    "author": "Data Vault Platform",
+    "license": "Apache-2.0",
+    "accordproject": {
+        "template": "contract",
+        "cicero": "^0.24.0",
+        "runtime": "ergo"
+    },
+    "devDependencies": {
+        "@accordproject/cicero-cli": "^0.24.0"
+    },
+    "scripts": {
+        "test": "cicero test"
+    },
+    "main": "index.js",
+    "keywords": []
+}

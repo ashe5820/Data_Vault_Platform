@@ -1,0 +1,39 @@
+namespace org.accordproject.ownership
+
+import org.accordproject.cicero.contract.* from https://models.accordproject.org/cicero/contract.cto
+import org.accordproject.cicero.runtime.* from https://models.accordproject.org/cicero/runtime.cto
+
+asset OwnershipDeedContract extends AccordContract {
+  o String assetId
+  o String assetName
+  o String assetType
+  o String assetDescription
+  o String ipfsHash
+  o String owner
+  o String jurisdiction
+  o DateTime creationDate
+  o String[] termsAndConditions
+}
+
+transaction VerifyOwnership {
+  o String requesterId
+  o String purpose
+}
+
+transaction TransferOwnership {
+  o String newOwner
+  o DateTime transferDate
+}
+
+event OwnershipVerified {
+  o String assetId
+  o String owner
+  o Boolean isValid
+}
+
+event OwnershipTransferred {
+  o String assetId
+  o String previousOwner
+  o String newOwner
+  o DateTime transferDate
+}

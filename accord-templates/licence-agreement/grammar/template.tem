@@ -1,0 +1,72 @@
+DIGITAL ASSET LICENSE AGREEMENT
+
+This License Agreement ("Agreement") is entered into on {{grantedAt as "DD MMMM YYYY"}}
+
+BETWEEN:
+Licensor: {{licensor}} ("Licensor")
+AND
+Licensee: {{licensee}} ("Licensee")
+
+REGARDING:
+Asset ID: {{assetId}}
+
+GRANT OF LICENSE:
+The Licensor hereby grants to the Licensee a {{#if exclusiveLicense}}EXCLUSIVE{{else}}NON-EXCLUSIVE{{/if}} license to use the above-referenced digital asset subject to the following terms:
+
+1. SCOPE OF LICENSE
+{{#if commercialUse}}
+- Commercial use: PERMITTED
+{{else}}
+- Commercial use: PROHIBITED
+{{/if}}
+- Geographic scope: {{geographicScope}}
+- Field of use: {{fieldOfUse}}
+
+2. LICENSE DURATION
+- Start Date: {{grantedAt}}
+- End Date: {{expiresAt}}
+- Duration: {{duration}} days
+
+3. LICENSE RESTRICTIONS
+The Licensee shall NOT:
+{{#ulist restrictions}}
+{{.}}
+{{/ulist}}
+
+4. PERMITTED USES
+The Licensee MAY:
+{{#ulist permittedUses}}
+{{.}}
+{{/ulist}}
+
+5. ATTRIBUTION
+{{#if attributionRequired}}
+Attribution to the Licensor is REQUIRED in the following format:
+"{{attributionText}}"
+{{else}}
+Attribution is not required.
+{{/if}}
+
+6. LICENSE FEE
+{{#if licenseeFee}}
+License Fee: {{licenseFeeAmount}} {{currency}}
+Payment Terms: {{paymentTerms}}
+{{else}}
+This license is granted free of charge.
+{{/if}}
+
+7. TERMINATION
+This license may be terminated:
+- Upon expiration of the license period
+- By mutual agreement of both parties
+- For breach of any term of this Agreement
+- By the Licensor with {{terminationNoticeDays}} days notice
+
+8. BLOCKCHAIN RECORD
+This Agreement has been recorded on the Ethereum blockchain.
+Transaction Hash: Will be provided upon execution
+
+DIGITAL SIGNATURES:
+Licensor: {{licensor}}
+Licensee: {{licensee}}
+Date: {{grantedAt}}

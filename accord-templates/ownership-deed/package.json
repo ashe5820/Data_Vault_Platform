@@ -1,0 +1,19 @@
+{
+  "name": "ownership-deed",
+  "displayName": "Digital Asset Ownership Deed",
+  "version": "1.0.0",
+  "description": "A template for digital asset ownership deeds with blockchain notarization",
+  "author": "Data Vault Platform",
+  "license": "Apache-2.0",
+  "accordproject": {
+    "template": "contract",
+    "cicero": "^0.24.0",
+    "runtime": "ergo"
+  },
+  "devDependencies": {
+    "@accordproject/cicero-cli": "^0.24.0"
+  },
+  "scripts": {
+    "test": "cicero test"
+  }
+}

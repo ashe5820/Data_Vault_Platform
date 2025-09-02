@@ -1,0 +1,40 @@
+namespace org.accordproject.licensing
+
+import org.accordproject.cicero.contract.*
+import org.accordproject.cicero.runtime.*
+
+contract LicenseAgreement over LicenseAgreementContract {
+  
+  clause checkLicenseStatus(request : CheckLicenseStatus) : LicenseValid {
+    let isValid = request.checkDate.isBefore(contract.expiresAt);
+    
+    return LicenseValid{
+      assetId: contract.assetId,
+      licensee: contract.licensee,
+      isValid: isValid,
+      checkDate: request.checkDate
+    }
+  }
+  
+  clause revokeLicense(request : RevokeLicense) : LicenseRevoked {
+    return LicenseRevoked{
+      assetId: contract.assetId,
+      licensee: contract.licensee,
+      reason: request.reason,
+      revocationDate: request.revocationDate
+    }
+  }
+  
+  clause recordUsage(request : UsageReport) : UsageRecorded {
+    // Validate usage is within license terms
+    enforce request.usageDate.isBefore(contract.expiresAt)
+    else throw failure("License has expired");
+    
+    return UsageRecorded{
+      assetId: contract.assetId,
+      licensee: contract.licensee,
+      usageType: request.usageType,
+      usageDate: request.usageDate
+    }
+  }
+}

@@ -1,0 +1,63 @@
+namespace org.accordproject.licensing
+
+import org.accordproject.cicero.contract.* from https://models.accordproject.org/cicero/contract.cto
+import org.accordproject.cicero.runtime.* from https://models.accordproject.org/cicero/runtime.cto
+import org.accordproject.money.CurrencyCode from https://models.accordproject.org/money.cto
+
+asset LicenseAgreementContract extends AccordContract {
+  o String assetId
+  o String licensor
+  o String licensee
+  o DateTime grantedAt
+  o DateTime expiresAt
+  o Integer duration
+  o Boolean commercialUse
+  o Boolean exclusiveLicense
+  o String geographicScope
+  o String fieldOfUse
+  o String[] restrictions
+  o String[] permittedUses
+  o Boolean attributionRequired
+  o String attributionText optional
+  o Boolean licenseFee
+  o Double licenseFeeAmount optional
+  o CurrencyCode currency optional
+  o String paymentTerms optional
+  o Integer terminationNoticeDays
+}
+
+transaction CheckLicenseStatus {
+  o DateTime checkDate
+}
+
+transaction RevokeLicense {
+  o String reason
+  o DateTime revocationDate
+}
+
+transaction UsageReport {
+  o String usageType
+  o DateTime usageDate
+  o String description
+}
+
+event LicenseValid {
+  o String assetId
+  o String licensee
+  o Boolean isValid
+  o DateTime checkDate
+}
+
+event LicenseRevoked {
+  o String assetId
+  o String licensee
+  o String reason
+  o DateTime revocationDate
+}
+
+event UsageRecorded {
+  o String assetId
+  o String licensee
+  o String usageType
+  o DateTime usageDate
+}
