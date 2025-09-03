@@ -20,9 +20,9 @@ const ipfsConfig = {
     host: process.env.IPFS_HOST || 'localhost',
     port: process.env.IPFS_PORT || 5001,
     protocol: process.env.IPFS_PROTOCOL || 'http',
-    options: {
-    fetch: fetch
-  }
+  //   options: {
+  //   fetch: fetch
+  // }
 };
 
 // Only add duplex in Node.js environments (not browser)

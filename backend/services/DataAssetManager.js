@@ -1,10 +1,11 @@
 const CryptoJS = require('crypto-js');
 
+// handles off-chain part of architecture
 class DataAssetManager {
     constructor(ipfsClient) {
         this.ipfs = ipfsClient;
-        this.assets = new Map(); // In production, use a proper database
-        this.odMetadata = new Map();
+        this.assets = new Map(); // Local in-memory "database" for asset metadata. In production, use a proper database. 
+        this.odMetadata = new Map(); // Local in-memory "database" for on-chain deed metadata
         console.log("DataAssetManager initialized");
     }
 
@@ -20,7 +21,9 @@ class DataAssetManager {
         console.log("DAM : Metadata:", metadata);
 
         try {
-            // Convert Buffer or object to string
+            // DATA NORMALISATION
+            // Converts various input types (file buffers, objects, strings) into a consistent string format 
+            // so it can be uniformly encrypted. Binary data is converted to a Base64 string.
             let stringData;
             if (Buffer.isBuffer(data)) {
                 stringData = data.toString('base64');
@@ -31,14 +34,14 @@ class DataAssetManager {
             }
 
             // Encrypt the data
-            const encryptionKey = CryptoJS.lib.WordArray.random(256 / 8).toString();
+            const encryptionKey = CryptoJS.lib.WordArray.random(256 / 8).toString();    // 32 byte
             const encryptedData = CryptoJS.AES.encrypt(stringData, encryptionKey).toString();
 
             // Prepare IPFS payload
             const assetObject = {
-                encryptedData,
-                encryptionKey,
-                metadata,
+                encryptedData,  // The unreadable ciphertext
+                // encryptionKey,   // The key used for encryption
+                metadata,       
                 timestamp: new Date().toISOString()
             };
 

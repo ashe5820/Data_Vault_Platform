@@ -1,8 +1,5 @@
 const { ethers } = require('ethers');
 const IPRightsRegistryABI = require('../contracts/IPRightsRegistry.json');  // loads the ABI (instruction manual for JS)
-const DataAssetManager = require('./DataAssetManager');
-const IPRService = require('./IPRService');
-const SLCEngine = require('./SLCEngine');
 
 
 class BlockchainService {
@@ -31,6 +28,9 @@ class BlockchainService {
             IPRightsRegistryABI.abi,
             wallet
         );
+        // console.log("Blockchain service constructor shoudl've created a K at address: ", contractAddress);
+        // const add = await this.contract.getAddress();
+        // console.log("Blockchain service constructor has created a K at address: ", add);
         this.eventHandlers = new Map();
     }
 
@@ -76,9 +76,13 @@ class BlockchainService {
                 termsHash,
                 slcManifestIPFS
             );
-            
+
+
             const receipt = await tx.wait();
-            
+            console.log('Block number:', receipt.blockNumber);
+            console.log('Gas used:', receipt.gasUsed);
+            console.log("Contract has registered Asset", tx);
+
             // Extract asset ID from events
             const event = receipt.logs.find(log => 
                 log.fragment && log.fragment.name === 'AssetRegistered'
@@ -94,12 +98,15 @@ class BlockchainService {
         }
     }
 
+
     async grantLicense({ assetId, licensee, termsHash, licenseIPFS, expiresAt }) {
 
         try {
+            const assetIdHash = ethers.keccak256(ethers.toUtf8Bytes(assetId));
             console.log("=== GRANT LICENSE DEBUG ===");
             console.log("Parameters:", {
                 assetId,
+                assetIdHash,
                 licensee,
                 termsHash,
                 licenseIPFS,
@@ -107,17 +114,22 @@ class BlockchainService {
                 expiresAtType: typeof expiresAt
             });
             // Check contract connection
-        console.log("Contract address:", this.contract.address);
-        console.log("Signer address:", await this.contract.signer.getAddress());
-        
-        // Check account balance
-        const balance = await this.contract.signer.getBalance();
-        console.log("Account balance:", ethers.utils.formatEther(balance), "ETH");
-        
+            // Get contract address
+            const contractAddress = await this.contract.getAddress();
+            console.log("Contract address:", contractAddress);
+            // Get signer address
+            const signer = await this.contract.runner;  // or this.signer if you stored it
+            const signerAddress = await signer.getAddress();
+            console.log("Signer address:", signerAddress);
+
+            // Check account balance
+            const provider = this.contract.runner.provider;
+            const balance = await provider.getBalance(signerAddress);
+            console.log("Account balance:", ethers.formatEther(balance), "ETH");
         // Estimate gas first
         try {
-            const gasEstimate = await this.contract.estimateGas.grantLicense(
-                assetId,
+            const gasEstimate = await this.contract.grantLicense.estimateGas(
+                assetIdHash,
                 licensee,
                 termsHash,
                 licenseIPFS,
@@ -142,6 +154,17 @@ class BlockchainService {
             return receipt;
         } catch (error) {
             throw new Error(`Blockchain license grant failed: ${error.message}`);
+        }
+    }
+
+    async getAssetOwner(assetId) {
+        try {
+            // Assuming your contract has a function to get asset details
+            const asset = await this.contract.getAsset(assetId);
+            console.log("Asset owner:", asset.owner);
+            return asset.owner;
+        } catch (error) {
+            console.error("Error getting asset owner:", error);
         }
     }
 

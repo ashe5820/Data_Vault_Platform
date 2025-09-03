@@ -68,7 +68,9 @@ class SLCEngine {
     hashTerms(terms) {
         const hash = crypto.createHash('sha256');
         hash.update(JSON.stringify(terms));
-        return '0x' + hash.digest('hex');
+        const digest = '0x' + hash.digest('hex');
+        console.log("SLC Engine has hashed the terms: ", digest)
+        return digest;
     }
 
     getOwnershipDeedTemplate() {
