@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="logo">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/backend/node_modules/@accordproject/ergo-compiler/test/data/logo.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
