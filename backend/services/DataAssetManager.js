@@ -48,6 +48,7 @@ class DataAssetManager {
             // Convert JSON payload to Blob or Buffer
             const payload = Buffer.from(JSON.stringify(assetObject));
             console.log("DAM : Uploading payload to IPFS ...");
+
             // Upload to IPFS via ipfs-http-client
             const result = await this.ipfs.add(JSON.stringify(assetObject), { duplex: "half" });
 
@@ -74,6 +75,8 @@ class DataAssetManager {
     async getAssetMetadata(assetId) {
         try {
             console.log("DAM is trying to retrieve the metadata for:", assetId);
+            console.log("DAM: but first let's print out all assets");
+            this.printAllContents()
             const metadata = this.assets.get(assetId);
     
             if (metadata === undefined) {
@@ -103,16 +106,20 @@ class DataAssetManager {
         return userAssets;
     }
 
-    async saveODMetadata({ assetId, odDocument, transactionHash, blockNumber }) {
+    async saveODMetadata({ assetId, odDocument, transactionHash, blockNumber, regAssetID }) {
+        console.log("DAM: saving given OD metadata ...")
+        console.log("DAM: we have received regAssetID value: ", regAssetID);
         this.odMetadata.set(assetId, {
             odDocument,
             transactionHash,
             blockNumber,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            regAssetID,
         });
         
         // Update asset status
         const asset = this.assets.get(assetId);
+        console.log("DAM: we have saved odMetadata:", this.getAssetMetadata(assetId));
         if (asset) {
             asset.status = 'registered';
             asset.transactionHash = transactionHash;
@@ -122,6 +129,19 @@ class DataAssetManager {
     async getODMetadata(assetId) {
         return this.odMetadata.get(assetId);
     }
+
+    printAllContents() {
+        console.log("==== DAM: All Assets ====");
+        for (const [id, asset] of this.assets) {
+            console.log(id, asset);
+        }
+
+        console.log("==== DAM: All Ownership Deeds (OD Metadata) ====");
+        for (const [assetId, od] of this.odMetadata) {
+            console.log(assetId, od);
+        }
+    }
+
 }
 
 module.exports = DataAssetManager;

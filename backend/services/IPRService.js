@@ -49,12 +49,16 @@ class IPRService {
                 slcManifestIPFS: odIPFSResult
             });
             console.log("Successfully registered !");
-            console.log("transactionHash:", txResult.hash);
+            console.log("Block Number:", txResult.blockNumber);
+            console.log("Receipt Hash:", txResult.receiptHash);
+            console.log("Registered Asset ID: ", txResult.regAssetId);
+
             return {
                 transactionHash: txResult.hash,
                 blockNumber: txResult.blockNumber,
                 odIPFSHash: odIPFSResult,
-                termsHash: termsHash
+                termsHash: termsHash,
+                regAssetID: txResult.regAssetId.toString(),
             };
         } catch (error) {
             throw new Error(`Notarization failed: ${error.message}`);
@@ -69,7 +73,7 @@ class IPRService {
         return odMetadata;
     }
 
-    async createLicense({ assetId, licensee, terms, duration, commercialUse }) {
+    async createLicense({ regAssetId, assetId, licensee, terms, duration, commercialUse }) {
         console.log("IPRS: You want a licence? Let's first get the metadata of this asset ...");
         const asset = await this.dataAssetManager.getAssetMetadata(assetId);
         if (!asset) {
@@ -108,6 +112,7 @@ class IPRService {
         // Register license on blockchain
         const termsHash = this.slcEngine.hashTerms(terms);
         await this.blockchainService.grantLicense({
+            regAssetId,
             assetId,
             licensee,
             termsHash,

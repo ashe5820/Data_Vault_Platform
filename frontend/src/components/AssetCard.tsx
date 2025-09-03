@@ -2,6 +2,8 @@
 import React from 'react';
 import { File, Shield, AlertCircle, Eye } from 'lucide-react';
 
+
+
 interface AssetCardProps {
   asset: any;
   loading: boolean;

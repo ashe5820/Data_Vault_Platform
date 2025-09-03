@@ -11,6 +11,7 @@ interface OwnershipDeed {
     ipfsHash: string;
     contentType?: string;
     size?: number;
+    regAssetId?: string;
   };
   createdAt: string;
   odDocument?: {
@@ -163,6 +164,10 @@ const OwnershipDeedModal: React.FC<OwnershipDeedModalProps> = ({
                 {selectedDeed.odDocument?.hash || 'N/A'}
               </span>
             </div>
+              <div className="flex justify-between">
+                  <span className="text-gray-600">Blockchain Asset ID:</span>
+                  <span className="font-mono">{selectedDeed.asset.regAssetId || 'Pending...'}</span>
+              </div>
           </div>
         </div>
 

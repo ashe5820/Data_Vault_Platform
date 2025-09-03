@@ -78,6 +78,7 @@ contract IPRightsRegistry is Ownable {
     error InvalidExpiration();
     error InvalidOwner();
     error AssetNotFound();
+    error LicenseAlreadyActive(); //
 
     /**
      * @dev Constructor - sets deployer as initial owner
@@ -131,6 +132,19 @@ contract IPRightsRegistry is Ownable {
         if (_licensee == address(0)) revert InvalidLicensee();
         if (_expiresAt <= block.timestamp) revert InvalidExpiration();
         
+        // 🚨 Guard: prevent duplicate active licenses
+            License[] storage licenses = assetLicenses[_assetId];
+            uint256 length = licenses.length;
+            for (uint256 i = 0; i < length;) {
+                if (
+                    licenses[i].licensee == _licensee &&
+                    !licenses[i].revoked &&
+                    licenses[i].expiresAt > block.timestamp
+                ) {
+                    revert LicenseAlreadyActive();
+                }
+                unchecked { ++i; }
+            }
         License memory newLicense = License({
             assetId: _assetId,
             licensor: msg.sender,

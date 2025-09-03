@@ -216,13 +216,15 @@ app.post('/api/assets/:assetId/register', async (req, res) => {
             odDocument: validatedOD,
             ipfsHash: assetMetadata.ipfsHash
         });
+        console.log("IPRService: we have received regAssetID: ", notarizationResult.regAssetID);
 
         // Step 5: Save OD metadata
         await dataAssetManager.saveODMetadata({
             assetId,
             odDocument: validatedOD,
             transactionHash: notarizationResult.transactionHash,
-            blockNumber: notarizationResult.blockNumber
+            blockNumber: notarizationResult.blockNumber,
+            regAssetID: notarizationResult.regAssetID,
         });
 
         res.json({
@@ -230,7 +232,8 @@ app.post('/api/assets/:assetId/register', async (req, res) => {
             assetId,
             transactionHash: notarizationResult.transactionHash,
             odDocument: validatedOD,
-            message: 'Ownership Deed registered successfully'
+            message: 'Ownership Deed registered successfully',
+            regAssetId: notarizationResult.regAssetId,
         });
     } catch (error) {
         console.error('Registration error:', error);
@@ -244,6 +247,7 @@ app.post('/api/assets/:assetId/register', async (req, res) => {
 app.get('/api/assets/:assetId/ownership-deed', async (req, res) => {
     try {
         const od = await iprService.getOwnershipDeed(req.params.assetId);
+        console.log("IPRService retrieved OD: ", od);
         res.json({ ownershipDeed: od });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -258,9 +262,11 @@ app.get('/api/assets/:assetId/ownership-deed', async (req, res) => {
 app.post('/api/assets/:assetId/license', async (req, res) => {
     try {
         const { assetId } = req.params;
-        const { licensee, terms, duration, commercialUse } = req.body;
-        console.log("You're trying to create a licence !");
+        const { regAssetId, licensee, terms, duration, commercialUse } = req.body;
+        console.log("You're trying to create a licence for asset w ID: ", assetId);
+        console.log("We have received from FE regAssetId: ", regAssetId);
         const license = await iprService.createLicense({
+            regAssetId,
             assetId,
             licensee,
             terms,

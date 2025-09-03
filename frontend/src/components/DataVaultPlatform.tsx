@@ -50,6 +50,27 @@ const DataVaultPlatform = () => {
     }
   };
 
+    const onShowLicenseModal = async (asset) => {
+        setLoading(true);
+        try {
+            // Fetch the ownership deed first
+            const response = await fetch(`${API_BASE}/assets/${asset.id}/ownership-deed`);
+            const data = await response.json();
+
+            let regAssetId = asset.regAssetId; // fallback
+            if (data.ownershipDeed) {
+                regAssetId = data.ownershipDeed.regAssetId;
+            }
+
+            setSelectedAsset({ ...asset, regAssetId });
+            setShowLicenseModal(true);
+        } catch (error) {
+            alert('Failed to fetch ownership deed: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -111,9 +132,19 @@ const DataVaultPlatform = () => {
       });
 
       const result = await response.json();
-      
+
+      // if (result.success && result.regAssetId) {
+      //       // Immediately update local state for instant UI feedback
+      //       setAssets(prevAssets =>
+      //           prevAssets.map(asset =>
+      //               asset.id === assetId
+      //                   ? { ...asset, regAssetId: result.regAssetId }
+      //                   : asset
+      //           )
+      //       );
       if (result.success) {
-        setRegistrationStatus('Ownership Deed registered on blockchain! ✓');
+          // result.regAssetId is the blockchain asset ID returned from backend
+          setRegistrationStatus('Ownership Deed registered on blockchain! ✓');
         await loadUserAssets();
         setTimeout(() => {
           setRegistrationStatus('');
@@ -133,11 +164,15 @@ const DataVaultPlatform = () => {
     try {
       const response = await fetch(`${API_BASE}/assets/${asset.id}/ownership-deed`);
       const data = await response.json();
-      
+      console.log("OD Data: ", data);
       if (data.ownershipDeed) {
         setSelectedDeed({
           ...data.ownershipDeed,
-          asset: asset
+          asset: {
+              ...asset,
+              regAssetId: asset.regAssetId || data.ownershipDeed.regAssetID
+
+          }
         });
         setShowDeedModal(true);
       } else {
@@ -209,6 +244,13 @@ Generated on: ${new Date().toLocaleString()}
 
   const handleCreateLicense = async () => {
     if (!selectedAsset || !licenseForm.licensee) return;
+      // Pull regAssetId from the deed if available, fallback to selectedAsset.regAssetId
+      const regAssetId = selectedDeed?.asset?.regAssetId || selectedAsset.regAssetId;
+
+      if (!regAssetId) {
+          alert("Asset must be registered on blockchain before creating a license.");
+          return;
+      }
 
     setLoading(true);
     try {
@@ -216,6 +258,7 @@ Generated on: ${new Date().toLocaleString()}
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+            regAssetId: regAssetId, // HERE IS WHERE I NEED HELP
           licensee: licenseForm.licensee,
           terms: {
             usage: 'Limited use as specified',
@@ -225,7 +268,8 @@ Generated on: ${new Date().toLocaleString()}
             commercialUse: licenseForm.commercialUse
           },
           duration: licenseForm.duration,
-          commercialUse: licenseForm.commercialUse
+          commercialUse: licenseForm.commercialUse,
+
         })
       });
       console.log("📡 Response status:", response.status, response.statusText);
@@ -272,10 +316,11 @@ Generated on: ${new Date().toLocaleString()}
             loading={loading}
             onRegisterOwnership={handleRegisterOwnership}
             onViewOwnershipDeed={handleViewOwnershipDeed}
-            onShowLicenseModal={(asset) => {
-              setSelectedAsset(asset);
-              setShowLicenseModal(true);
-            }}
+            // onShowLicenseModal={(asset) => {
+            //   setSelectedAsset(asset);
+            //   setShowLicenseModal(true);
+            // }}
+            onShowLicenseModal={onShowLicenseModal} // <-- updated here
             onSwitchToUpload={() => setCurrentTab('upload')}
           />
           )}

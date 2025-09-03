@@ -77,21 +77,20 @@ class BlockchainService {
                 slcManifestIPFS
             );
 
-
             const receipt = await tx.wait();
             console.log('Block number:', receipt.blockNumber);
             console.log('Gas used:', receipt.gasUsed);
-            console.log("Contract has registered Asset", tx);
+            console.log("Receipt: ", receipt);
 
-            // Extract asset ID from events
-            const event = receipt.logs.find(log => 
-                log.fragment && log.fragment.name === 'AssetRegistered'
-            );
-            
+            const event = receipt.logs.find(log => log.fragment && log.fragment.name === 'AssetRegistered' );
+            let regAssetID = event.args[0];
+            console.log("Registered Asset ID: ", regAssetID);
+            console.log("AssetRegistered event args: ", event.args);
+
             return {
-                hash: receipt.hash,
+                receiptHash: receipt.hash,
                 blockNumber: receipt.blockNumber,
-                assetId: event ? event.args[0] : null
+                regAssetId: regAssetID
             };
         } catch (error) {
             throw new Error(`Blockchain registration failed: ${error.message}`);
@@ -99,9 +98,17 @@ class BlockchainService {
     }
 
 
-    async grantLicense({ assetId, licensee, termsHash, licenseIPFS, expiresAt }) {
+    async grantLicense({ regAssetId, assetId, licensee, termsHash, licenseIPFS, expiresAt }) {
 
         try {
+            // Before granting license, check ownership
+            console.log("BS: received regAssetId:", regAssetId);
+            const owner = await this.getAssetOwner(regAssetId);
+            const currentSigner = await this.wallet.getAddress();
+            console.log("Asset owner add:", owner);
+            console.log("Current signer:", currentSigner);
+            console.log("Is owner?", owner.toLowerCase() === currentSigner.toLowerCase());
+
             const assetIdHash = ethers.keccak256(ethers.toUtf8Bytes(assetId));
             console.log("=== GRANT LICENSE DEBUG ===");
             console.log("Parameters:", {
@@ -157,12 +164,13 @@ class BlockchainService {
         }
     }
 
-    async getAssetOwner(assetId) {
+    async getAssetOwner(reqAssetId) {
         try {
             // Assuming your contract has a function to get asset details
-            const asset = await this.contract.getAsset(assetId);
-            console.log("Asset owner:", asset.owner);
-            return asset.owner;
+            const assetData = await this.contract.assets(reqAssetId);
+            console.log("Asset Data retrieved from reqAssetId: ", assetData);
+            const assetOwnerAdd = assetData.owner;
+            return asset.assetOwnerAdd;
         } catch (error) {
             console.error("Error getting asset owner:", error);
         }
