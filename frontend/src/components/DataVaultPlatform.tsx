@@ -56,13 +56,15 @@ const DataVaultPlatform = () => {
             // Fetch the ownership deed first
             const response = await fetch(`${API_BASE}/assets/${asset.id}/ownership-deed`);
             const data = await response.json();
-
-            let regAssetId = asset.regAssetId; // fallback
+            console.log("Fetched response data: ", data);
+            // let regAssetID = data.ownershipDeed.regAssetID; // fallback
+            // console.log("regAssetID: ", regAssetID);
+            let regAssetID = asset.regAssetID || null; // fallback to existing
             if (data.ownershipDeed) {
-                regAssetId = data.ownershipDeed.regAssetId;
+                regAssetID = data.ownershipDeed.regAssetID;
             }
 
-            setSelectedAsset({ ...asset, regAssetId });
+            setSelectedAsset({ ...asset, regAssetID: regAssetID});
             setShowLicenseModal(true);
         } catch (error) {
             alert('Failed to fetch ownership deed: ' + error.message);
@@ -245,9 +247,11 @@ Generated on: ${new Date().toLocaleString()}
   const handleCreateLicense = async () => {
     if (!selectedAsset || !licenseForm.licensee) return;
       // Pull regAssetId from the deed if available, fallback to selectedAsset.regAssetId
-      const regAssetId = selectedDeed?.asset?.regAssetId || selectedAsset.regAssetId;
+      console.log("Selected Asset is : ", selectedAsset);
+      const regAssetID = selectedAsset.regAssetID;
+      console.log("RegAssetID from selected asset: ", regAssetID);
 
-      if (!regAssetId) {
+      if (!regAssetID) {
           alert("Asset must be registered on blockchain before creating a license.");
           return;
       }
@@ -258,7 +262,7 @@ Generated on: ${new Date().toLocaleString()}
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            regAssetId: regAssetId, // HERE IS WHERE I NEED HELP
+            regAssetID: regAssetID, // HERE IS WHERE I NEED HELP
           licensee: licenseForm.licensee,
           terms: {
             usage: 'Limited use as specified',

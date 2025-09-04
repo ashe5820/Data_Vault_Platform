@@ -2,6 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
+
 
 /**
  * @title IPRightsRegistry
@@ -37,6 +39,7 @@ contract IPRightsRegistry is Ownable {
     mapping(address => uint256[]) public userAssets;
     mapping(uint256 => License[]) public assetLicenses;
     mapping(bytes32 => bool) public registeredTerms;
+    mapping(uint256 => mapping(address => bool)) public activeLicenses;
     
     // Events
     event AssetRegistered(
@@ -127,24 +130,36 @@ contract IPRightsRegistry is Ownable {
         string calldata _licenseIPFS,
         uint256 _expiresAt
     ) external {
-        if (assets[_assetId].owner != msg.sender) revert NotAssetOwner();
-        if (!assets[_assetId].active) revert AssetNotActive();
-        if (_licensee == address(0)) revert InvalidLicensee();
-        if (_expiresAt <= block.timestamp) revert InvalidExpiration();
-        
-        // 🚨 Guard: prevent duplicate active licenses
-            License[] storage licenses = assetLicenses[_assetId];
-            uint256 length = licenses.length;
-            for (uint256 i = 0; i < length;) {
-                if (
-                    licenses[i].licensee == _licensee &&
-                    !licenses[i].revoked &&
-                    licenses[i].expiresAt > block.timestamp
-                ) {
-                    revert LicenseAlreadyActive();
-                }
-                unchecked { ++i; }
+            console.log("grantLicense called for asset:", _assetId);
+            console.log("msg.sender:", msg.sender);
+            console.log("licensee:", _licensee);
+            console.log("termsHash as uint:", uint256(_licenseTermsHash));
+            console.log("expiresAt:", _expiresAt);
+
+            if (assets[_assetId].owner != msg.sender) {
+                console.log("Not asset owner!");
+                revert NotAssetOwner();
             }
+            if (!assets[_assetId].active) {
+                console.log("Asset not active!");
+                revert AssetNotActive();
+            }
+            if (_licensee == address(0)) {
+                console.log("Invalid licensee!");
+                revert InvalidLicensee();
+            }
+            if (_expiresAt <= block.timestamp) {
+                console.log("Invalid expiration!");
+                revert InvalidExpiration();
+            }
+
+            if (activeLicenses[_assetId][_licensee]) {
+                console.log("License already active for this licensee!");
+                revert LicenseAlreadyActive();
+            }
+
+            console.log("Pushing license to array...");
+
         License memory newLicense = License({
             assetId: _assetId,
             licensor: msg.sender,
@@ -157,6 +172,8 @@ contract IPRightsRegistry is Ownable {
         });
         
         assetLicenses[_assetId].push(newLicense);
+        activeLicenses[_assetId][_licensee] = true;
+        console.log("License granted successfully!");
         
         emit LicenseGranted(_assetId, msg.sender, _licensee, _licenseTermsHash);
     }

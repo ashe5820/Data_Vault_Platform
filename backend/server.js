@@ -247,7 +247,7 @@ app.post('/api/assets/:assetId/register', async (req, res) => {
 app.get('/api/assets/:assetId/ownership-deed', async (req, res) => {
     try {
         const od = await iprService.getOwnershipDeed(req.params.assetId);
-        console.log("IPRService retrieved OD: ", od);
+        console.log("server: IPRService retrieved OD: ", od);
         res.json({ ownershipDeed: od });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -262,17 +262,19 @@ app.get('/api/assets/:assetId/ownership-deed', async (req, res) => {
 app.post('/api/assets/:assetId/license', async (req, res) => {
     try {
         const { assetId } = req.params;
-        const { regAssetId, licensee, terms, duration, commercialUse } = req.body;
-        console.log("You're trying to create a licence for asset w ID: ", assetId);
-        console.log("We have received from FE regAssetId: ", regAssetId);
+        const { regAssetID, licensee, terms, duration, commercialUse } = req.body;
+        console.log("server: You're trying to create a licence for asset w ID: ", assetId);
+        console.log("We have received from FE regAssetId: ", regAssetID);
         const license = await iprService.createLicense({
-            regAssetId,
+            regAssetID,
             assetId,
             licensee,
             terms,
             duration,
             commercialUse
         });
+
+        console.log("server: license granted: ", license);
 
         res.json({
             success: true,

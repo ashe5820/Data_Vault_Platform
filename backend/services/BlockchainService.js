@@ -98,12 +98,12 @@ class BlockchainService {
     }
 
 
-    async grantLicense({ regAssetId, assetId, licensee, termsHash, licenseIPFS, expiresAt }) {
-
+    async grantLicense({ regAssetID, assetId, licensee, termsHash, licenseIPFS, expiresAt }) {
+        // licensee = licensee address
         try {
             // Before granting license, check ownership
-            console.log("BS: received regAssetId:", regAssetId);
-            const owner = await this.getAssetOwner(regAssetId);
+            console.log("BS: received regAssetId:", regAssetID);
+            const owner = await this.getAssetOwner(regAssetID);
             const currentSigner = await this.wallet.getAddress();
             console.log("Asset owner add:", owner);
             console.log("Current signer:", currentSigner);
@@ -133,11 +133,26 @@ class BlockchainService {
             const provider = this.contract.runner.provider;
             const balance = await provider.getBalance(signerAddress);
             console.log("Account balance:", ethers.formatEther(balance), "ETH");
+            console.log("Licensee param:", licensee);
+
+            const validateAddress = (address) => {
+                if (!ethers.isAddress(address)) {
+                    throw new Error(`Invalid Ethereum address: ${address}`);
+                }
+                return ethers.getAddress(address); // Normalizes to checksum format
+            };
+
+
+
+            //add function to check licensee is a valid 42 character address
+            const normalizedLicensee = validateAddress(licensee);
         // Estimate gas first
         try {
+
+            console.log("ok now trying gas estimate");
             const gasEstimate = await this.contract.grantLicense.estimateGas(
-                assetIdHash,
-                licensee,
+                regAssetID,
+                normalizedLicensee,
                 termsHash,
                 licenseIPFS,
                 expiresAt
@@ -149,17 +164,19 @@ class BlockchainService {
         }
             console.log("BlockchainService: sending this transaction trying to grant you a licence!");
             const tx = await this.contract.grantLicense(
-                assetId,
-                licensee,
+                regAssetID,
+                normalizedLicensee,
                 termsHash,
                 licenseIPFS,
                 expiresAt
             );
+            console.log("BCService: Transaction transaction sent:", tx);
             
             const receipt = await tx.wait();
             console.log("The BlockchainService has granted you the licence!");
             return receipt;
         } catch (error) {
+            console.log("BCService: Error Caught: ", error.message);
             throw new Error(`Blockchain license grant failed: ${error.message}`);
         }
     }
@@ -170,7 +187,7 @@ class BlockchainService {
             const assetData = await this.contract.assets(reqAssetId);
             console.log("Asset Data retrieved from reqAssetId: ", assetData);
             const assetOwnerAdd = assetData.owner;
-            return asset.assetOwnerAdd;
+            return assetOwnerAdd;
         } catch (error) {
             console.error("Error getting asset owner:", error);
         }

@@ -73,7 +73,7 @@ class IPRService {
         return odMetadata;
     }
 
-    async createLicense({ regAssetId, assetId, licensee, terms, duration, commercialUse }) {
+    async createLicense({ regAssetID, assetId, licensee, terms, duration, commercialUse }) {
         console.log("IPRS: You want a licence? Let's first get the metadata of this asset ...");
         const asset = await this.dataAssetManager.getAssetMetadata(assetId);
         if (!asset) {
@@ -111,8 +111,9 @@ class IPRService {
         console.log("IPRService: Registering the licence on BC ...");
         // Register license on blockchain
         const termsHash = this.slcEngine.hashTerms(terms);
+        console.log("IPRService: Asking BCService to grant licence for regAssetID: ", regAssetID);
         await this.blockchainService.grantLicense({
-            regAssetId,
+            regAssetID,
             assetId,
             licensee,
             termsHash,
