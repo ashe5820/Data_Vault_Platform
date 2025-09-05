@@ -196,6 +196,22 @@ app.get('/api/assets/user/:userId', async (req, res) => {
     }
 });
 
+
+/**
+ * Get user's licenses
+ */
+app.get('/api/licenses/user/:userId', async (req, res) => {
+    try {
+        const licenses = await dataAssetManager.getUserLicenses(req.params.userId);
+        console.log("server: fetched user licenses from DAM: ", licenses);
+        res.json({ licenses });
+    } catch (error) {
+        console.error("API Error fetching user licenses:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 // ============= PHASE 2: Ownership Deed Registration Routes =============
 
 /**

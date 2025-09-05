@@ -3,7 +3,7 @@ import React from 'react';
 import {Clock} from 'lucide-react';
 
 
-interface AuditTabProp {  // Add any props you might need in the future
+interface AuditTabProp {
     }
 
 const AuditTab: React.FC<AuditTabProp> = () => {

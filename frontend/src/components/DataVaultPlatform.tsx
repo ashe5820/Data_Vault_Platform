@@ -360,10 +360,6 @@ Generated on: ${new Date().toLocaleString()}
             loading={loading}
             onRegisterOwnership={handleRegisterOwnership}
             onViewOwnershipDeed={handleViewOwnershipDeed}
-            // onShowLicenseModal={(asset) => {
-            //   setSelectedAsset(asset);
-            //   setShowLicenseModal(true);
-            // }}
             onShowLicenseModal={onShowLicenseModal} // <-- updated here
             onSwitchToUpload={() => setCurrentTab('upload')}
           />

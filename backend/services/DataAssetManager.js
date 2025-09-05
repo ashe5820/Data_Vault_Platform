@@ -7,6 +7,8 @@ class DataAssetManager {
         this.assets = new Map(); // Local in-memory "database" for asset metadata. In production, use a proper database. 
         this.odMetadata = new Map(); // Local in-memory "database" for on-chain deed metadata
         console.log("DataAssetManager initialized");
+        this.licenses = new Map(); // Local in-memory "database" for license metadata
+
     }
 
     /**
@@ -45,6 +47,13 @@ class DataAssetManager {
                 timestamp: new Date().toISOString()
             };
 
+            let licenseId = null;
+            if (metadata.type === 'license') {
+                console.log("DAM : Detected license, storing license metadata ...");
+                licenseId = await this.storeLicenseMetadata(metadata);
+                console.log("DAM : License metadata stored with ID:", licenseId);
+            }
+
             // Convert JSON payload to Blob or Buffer
             const payload = Buffer.from(JSON.stringify(assetObject));
             console.log("DAM : Uploading payload to IPFS ...");
@@ -59,6 +68,19 @@ class DataAssetManager {
             console.error("DAM : Failed to upload to IPFS:", error);
             throw new Error(`DAM : Failed to upload to IPFS: ${error.message}`);
         }
+    }
+
+    /**
+     * Save a license metadata entry after upload
+     */
+    async storeLicenseMetadata(metadata) {
+        const licenseId = `license_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        this.licenses.set(licenseId, {
+            ...metadata,
+            id: licenseId,
+            createdAt: new Date().toISOString()
+        });
+        return licenseId;
     }
 
     async storeAssetMetadata(metadata) {
@@ -104,6 +126,22 @@ class DataAssetManager {
             }
         }
         return userAssets;
+    }
+
+    /**
+     * Get all licenses created by a specific user
+     * (user is licensor / asset owner)
+     */
+    async getUserLicenses(userId) {
+        const userLicenses = [];
+        for (const [id, license] of this.licenses) {
+            // if (license.licensor === userId) {
+                userLicenses.push({ id, ...license });
+            // }
+        }
+        console.log("DAM: content of license map is: ", this.licenses);
+        console.log("DAM: we have foudn this many user licenses: ", userLicenses);
+        return userLicenses;
     }
 
     async saveODMetadata({ assetId, odDocument, transactionHash, blockNumber, regAssetID }) {
