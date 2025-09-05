@@ -4,36 +4,109 @@ const { Resolver } = require('did-resolver');
 const { getResolver } = require('ethr-did-resolver');
 const { EthrDID } = require('ethr-did');
 const jwt = require('jsonwebtoken');
+const { ethers } = require('ethers');
+
 
 class DIDAuthService {
-    constructor(provider, privateKey) {
+    // Make constructor private-ish - only for internal use
+    constructor(provider, privateKey, wallet) {
         this.provider = provider;
         this.privateKey = privateKey;
-        
-        // Configure DID resolver for Ethereum
-        this.resolver = new Resolver({
-            ...getResolver({
-                networks: [
-                    {
-                        name: 'mainnet',
-                        rpcUrl: process.env.ETHEREUM_RPC_URL
-                    }
-                ]
-            })
+        this.wallet = wallet;
+        this.issuerDID = null;
+        this.resolver = null;
+    }
+
+    // Static factory method for async initialization
+    static async create(provider, privateKey, wallet) {
+        if (!provider || typeof provider !== 'object') {
+            throw new Error('Invalid provider passed to DIDAuthService');
+        }
+
+        const instance = new DIDAuthService(provider, privateKey, wallet);
+        await instance.initializeDID();
+        return instance;
+    }
+
+    async initialize(provider, privateKey, wallet, chainId, rpcUrl) {
+        this.provider = provider;
+        this.privateKey = privateKey;
+        this.wallet = wallet;
+
+        console.log("Initializing EthrDID with RPC URL:", rpcUrl);
+
+        // Configure DID resolver
+        const resolverConfig = getResolver({
+            networks: [
+                {
+                    name: 'dev',
+                    rpcUrl: rpcUrl,
+                    chainId: parseInt(chainId),
+                    registry: process.env.DID_REGISTRY_ADDRESS
+                }
+            ]
         });
-        
-        // Create issuer DID
-        this.issuerDID = new EthrDID({
-            identifier: process.env.ISSUER_ADDRESS,
-            privateKey: this.privateKey,
-            provider: this.provider
-        });
+
+        this.resolver = new Resolver(resolverConfig);
+
+        // KEY FIX: Create EthrDID without passing provider object
+        try {
+            this.issuerDID = new EthrDID({
+                identifier: wallet.address,
+                privateKey: privateKey,
+                // Omit provider parameter - let ethr-did create its own
+                chainNameOrId: chainId,
+                rpcUrl: rpcUrl,  // Pass RPC URL directly
+                registry: process.env.DID_REGISTRY_ADDRESS
+            });
+
+            console.log("✅ EthrDID created successfully:", this.issuerDID.did);
+
+        } catch (error) {
+            console.error("❌ EthrDID creation failed:", error);
+
+            // Fallback: try without any network configuration
+            console.log("Trying fallback without network config...");
+            this.issuerDID = new EthrDID({
+                identifier: wallet.address,
+                privateKey: privateKey
+            });
+
+            console.log("✅ EthrDID created with fallback:", this.issuerDID.did);
+        }
+    }
+    async init() {
+        console.log("Initializing DIDAuthService...");
+
+        // First verify provider connectivity
+        await this.verifyProvider();
+
+        try {
+            this.issuerDID = new EthrDID({
+                identifier: this.issuerAddress,
+                privateKey: this.privateKey,
+                provider: this.provider,
+                chainNameOrId: '31337' // Hardhat's chain ID
+            });
+            console.log("EthrDID created successfully");
+            return this;
+        } catch (error) {
+            console.error("Failed to create EthrDID:", error);
+            throw error;
+        }
     }
 
     /**
      * Implement Sign-In with Ethereum (SIWE)
+     * * Authenticate users via their Ethereum wallet. Checks their Signature matches claimed wallet. and message isn't expired
+     * * RETURN: JWT token to protect API endpoints
      */
     async verifySIWE(message, signature, address) {
+        // 1. Parse SIWE message
+        // 2. Recover Ethereum address from signature
+        // 3. Compare to claimed address
+        // 4. Check expiration and "not before"
+        // 5. Issue JWT session token
         try {
             // Parse SIWE message
             const siweMessage = this.parseSIWEMessage(message);
@@ -80,6 +153,7 @@ class DIDAuthService {
 
     /**
      * Create a Verifiable Credential for asset ownership
+     * * RETURN: Signed Verifiable Credential JWT that says “this DID owns this asset”.
      */
     async createOwnershipCredential(assetData, ownerDID) {
         const vcPayload = {
@@ -150,6 +224,9 @@ class DIDAuthService {
 
     /**
      * Verify a Verifiable Credential
+     * * Uses your DID resolver to verify:
+     * ****** Signature is valid (signed by issuer DID).
+     ********** Credential has not been tampered with.
      */
     async verifyCredential(vcJwt) {
         try {
@@ -243,6 +320,7 @@ class DIDAuthService {
 }
 
 // Enhanced authentication middleware
+// ****** how you protect your /api/assets and /api/credentials routes.
 class AuthMiddleware {
     constructor(didService) {
         this.didService = didService;

@@ -8,6 +8,8 @@ const { create } = require('ipfs-http-client');
 const { Template, Clause } = require('@accordproject/cicero-core');
 const { Engine } = require('@accordproject/cicero-engine');
 const jwt = require('jsonwebtoken');
+const { DIDAuthService, integrateAuth } = require('./services/DIDAuthService');
+
 require('dotenv').config();
 const fetch = require('node-fetch');
 
@@ -20,9 +22,6 @@ const ipfsConfig = {
     host: process.env.IPFS_HOST || 'localhost',
     port: process.env.IPFS_PORT || 5001,
     protocol: process.env.IPFS_PROTOCOL || 'http',
-  //   options: {
-  //   fetch: fetch
-  // }
 };
 
 // Only add duplex in Node.js environments (not browser)
@@ -34,36 +33,65 @@ if (typeof window === 'undefined') {
 
 const ipfs = create(ipfsConfig);
 
-// Initialize IPFS client
-// const ipfs = create({
-//     host: process.env.IPFS_HOST || 'localhost',
-//     port: process.env.IPFS_PORT || 5001,
-//     protocol: 'http',
-//     fetchOptions: {
-//         duplex: 'half'  // ← Add this line to fix the error
-//     }
-// });
 
-// Initialize Ethereum provider
+//  1. Initialize Ethereum provider
+    // ETHEREUM_RPC_URL=http://localhost:8545
+    // Creates a connection to an Ethereum node (local Hardhat node)
 const provider = new ethers.JsonRpcProvider(process.env.ETHEREUM_RPC_URL);
-// const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
-// Make sure private key is properly formatted
+//  2. Make sure private key is properly formatted
 let privateKey = process.env.PRIVATE_KEY;
 if (!privateKey.startsWith('0x')) {
     privateKey = '0x' + privateKey;
 }
- 
-// Option 1
+console.log("server: PrivateKey: ", privateKey);
+
+//  3. Create Wallet
+        // Option 1
 // const wallet = new ethers.Wallet(privateKey, provider);
 
-// Option 2 Use Hardhat's first test account (has 10000 ETH)
+        // Option 2 Use Hardhat's first test account (has 10000 ETH)
 const wallet = new ethers.Wallet(
     "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", // Hardhat account #0
     provider
 );
+console.log("Connected wallet address:", wallet.address); // Ethereum address derived from the private key
+//
+// //  4. Create DIDAuthService
+// // Parameters passed:
+// //     provider: The Ethereum connection
+// //     privateKey: Used to create/sign DID credentials
+// const didService = new DIDAuthService(provider, "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80", wallet);
+// await didService.ensureInitialized();
+// integrateAuth(app, didService); // this hooks up your endpoints and middleware
 
-console.log("Connected wallet address:", wallet.address);
+
+
+
+async function startServer() {
+        try{
+        // Use the factory method with await
+        const didService = await DIDAuthService.create(
+            provider,
+            "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+            wallet
+        );
+
+        integrateAuth(app, didService);
+
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+
+    } catch (error) {
+        console.error("Failed to start server:", error);
+        process.exit(1);
+    }
+}
+
+// startServer()
+
 
 // Middleware
 app.use(cors());

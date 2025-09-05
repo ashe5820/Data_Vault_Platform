@@ -21,6 +21,8 @@ const DataVaultPlatform = () => {
   const [showLicenseModal, setShowLicenseModal] = useState(false);
   const [showDeedModal, setShowDeedModal] = useState(false);
   const [selectedDeed, setSelectedDeed] = useState(null);
+  const [licenses, setLicenses] = useState([]);
+  const [licensesLoading, setLicensesLoading] = useState(false);
   const [licenseForm, setLicenseForm] = useState({
     licensee: '',
     duration: 30,
@@ -49,6 +51,25 @@ const DataVaultPlatform = () => {
       console.error('Failed to load assets:', error);
     }
   };
+
+    useEffect(() => {
+        loadUserAssets();
+        loadUserLicenses(); // Add this line
+    }, []);
+
+    const loadUserLicenses = async () => {
+        setLicensesLoading(true);
+        try {
+            const response = await fetch(`${API_BASE}/licenses/user/${currentUser.id}`);
+            const data = await response.json();
+            console.log("data fetched licenses:", data);
+            setLicenses(data.licenses || []);
+        } catch (error) {
+            console.error('Failed to load licenses:', error);
+        } finally {
+            setLicensesLoading(false);
+        }
+    };
 
     const onShowLicenseModal = async (asset) => {
         setLoading(true);
@@ -135,15 +156,7 @@ const DataVaultPlatform = () => {
 
       const result = await response.json();
 
-      // if (result.success && result.regAssetId) {
-      //       // Immediately update local state for instant UI feedback
-      //       setAssets(prevAssets =>
-      //           prevAssets.map(asset =>
-      //               asset.id === assetId
-      //                   ? { ...asset, regAssetId: result.regAssetId }
-      //                   : asset
-      //           )
-      //       );
+
       if (result.success) {
           // result.regAssetId is the blockchain asset ID returned from backend
           setRegistrationStatus('Ownership Deed registered on blockchain! ✓');
@@ -285,6 +298,8 @@ Generated on: ${new Date().toLocaleString()}
         alert('License created successfully!');
         setShowLicenseModal(false);
         setLicenseForm({ licensee: '', duration: 30, commercialUse: false });
+        await loadUserLicenses(); // Add this line to refresh licenses
+
       }
     } catch (error) {
       alert('Failed to create license: ' + error.message);
@@ -292,6 +307,31 @@ Generated on: ${new Date().toLocaleString()}
       setLoading(false);
     }
   };
+    const handleRevokeLicense = async (licenseId) => {
+        if (!confirm('Are you sure you want to revoke this license?')) return;
+
+        setLoading(true);
+        try {
+            const response = await fetch(`${API_BASE}/licenses/${licenseId}/revoke`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: currentUser.id })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('License revoked successfully!');
+                await loadUserLicenses(); // Reload licenses
+            } else {
+                alert('Failed to revoke license: ' + result.error);
+            }
+        } catch (error) {
+            alert('Failed to revoke license: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -330,7 +370,13 @@ Generated on: ${new Date().toLocaleString()}
           )}
 
         {/* Licenses Tab */}
-        {currentTab === 'licenses' && <LicensesTab />}
+        {currentTab === 'licenses' && (
+            <LicensesTab
+                licenses={licenses}
+                isLoading={licensesLoading}
+                onRevokeLicense={handleRevokeLicense} // Optional: if you added the revoke handler
+            />
+        )}
 
         {/* Audit Tab */}
         {currentTab === 'audit' && <AuditTab />}
