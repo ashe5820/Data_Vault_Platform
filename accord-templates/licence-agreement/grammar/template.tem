@@ -1,5 +1,4 @@
 DIGITAL ASSET LICENSE AGREEMENT
-
 This License Agreement ("Agreement") is entered into on {{grantedAt as "DD MMMM YYYY"}}
 
 BETWEEN:
@@ -10,63 +9,79 @@ Licensee: {{licensee}} ("Licensee")
 REGARDING:
 Asset ID: {{assetId}}
 
-GRANT OF LICENSE:
-The Licensor hereby grants to the Licensee a {{#if exclusiveLicense}}EXCLUSIVE{{else}}NON-EXCLUSIVE{{/if}} license to use the above-referenced digital asset subject to the following terms:
+1. LICENSE GRANT
+The Licensor grants the Licensee the following rights to use the above-referenced asset:
 
-1. SCOPE OF LICENSE
-{{#if commercialUse}}
-- Commercial use: PERMITTED
-{{else}}
-- Commercial use: PROHIBITED
-{{/if}}
-- Geographic scope: {{geographicScope}}
-- Field of use: {{fieldOfUse}}
+1.1 Exclusivity
+* Type: {{#if exclusiveLicense}}EXCLUSIVE{{else}}NON-EXCLUSIVE{{/if}}
 
-2. LICENSE DURATION
-- Start Date: {{grantedAt}}
-- End Date: {{expiresAt}}
-- Duration: {{duration}} days
+1.2 Territorial Scope
+* Territory: {{#if territorialScope}}{{territorialScope}}{{else}}WORLDWIDE{{/if}}
 
-3. LICENSE RESTRICTIONS
-The Licensee shall NOT:
-{{#ulist restrictions}}
-{{.}}
-{{/ulist}}
+1.3 Sublicensing
+* Sublicensing: {{#if sublicensable}}PERMITTED{{else}}PROHIBITED{{/if}}
 
-4. PERMITTED USES
-The Licensee MAY:
-{{#ulist permittedUses}}
-{{.}}
-{{/ulist}}
+1.4 Revocability
+* Status: {{#if revocable}}REVOCABLE{{else}}IRREVOCABLE{{/if}}
 
-5. ATTRIBUTION
-{{#if attributionRequired}}
-Attribution to the Licensor is REQUIRED in the following format:
-"{{attributionText}}"
-{{else}}
-Attribution is not required.
-{{/if}}
+2. COMMERCIAL TERMS
+2.1 Commercial Use
+* {{#if commercialUse}}PERMITTED{{else}}NON-COMMERCIAL{{/if}}
 
-6. LICENSE FEE
-{{#if licenseeFee}}
-License Fee: {{licenseFeeAmount}} {{currency}}
-Payment Terms: {{paymentTerms}}
-{{else}}
-This license is granted free of charge.
-{{/if}}
+2.2 License Fees
+* {{#if royaltyFree}}ROYALTY-FREE{{else}}REMUNERATED: {{#if oneTimeFee}}One-time fee of {{licenseFeeAmount}} {{currency}}{{else}}Recurring fee of {{recurringFeeAmount}} {{currency}} per {{billingPeriod}}{{/if}}{{/if}}
 
-7. TERMINATION
-This license may be terminated:
-- Upon expiration of the license period
-- By mutual agreement of both parties
-- For breach of any term of this Agreement
-- By the Licensor with {{terminationNoticeDays}} days notice
+3. USAGE RIGHTS
+3.1 Reproduction
+* {{#if unlimitedReproduction}}Unlimited copies allowed{{else}}Maximum copies: {{maxCopies}}{{/if}}
 
-8. BLOCKCHAIN RECORD
-This Agreement has been recorded on the Ethereum blockchain.
-Transaction Hash: Will be provided upon execution
+3.2 Physical Distribution
+* {{#if physicalDistribution}}Allowed, formats: {{#ulist distributionFormats}}{{.}}{{/ulist}}{{else}}Digital only{{/if}}
+
+3.3 Derivatives
+* {{#if derivativesAllowed}}Permitted{{else}}Prohibited{{/if}}
+* {{#if viralLicense}}Viral License: YES{{else}}Viral License: NO{{/if}}
+
+3.4 Translation
+* {{#if translationAllowed}}Permitted{{else}}Prohibited{{/if}}
+
+3.5 Transfer of Rights
+* {{#if transferable}}Permitted{{else}}Prohibited{{/if}}
+
+4. LICENSE DURATION
+* Effective Date: {{grantedAt}}
+* Expiration Date: {{expiresAt}}
+* Duration: {{duration}} days
+
+5. PERMITTED USES
+* Standard uses: personal, commercial (if allowed), display, reproduction as permitted.
+
+6. PROHIBITED USES
+* Modification or redistribution beyond license terms
+* Circumventing DRM or encryption
+* Any unlawful use
+
+7. WARRANTIES & LIABILITY
+* Warranties: Licensor provides asset "as-is"; no additional warranties.
+* Liability: Licensor not liable for any damages arising from use.
+
+8. GOVERNING LAW
+* Law: {{governingLaw}}
+* Jurisdiction: {{jurisdiction}}
+* Dispute Resolution: {{disputeResolution}}
+
+9. BLOCKCHAIN RECORD
+* Blockchain: {{blockchainNetwork}}
+* Smart Contract: {{contractAddress}}
+* Transaction Hash: {{transactionHash}}
+* Immutable Record: Yes
+
+10. ENTIRE AGREEMENT
+This Agreement is the complete agreement between the parties and supersedes all prior understandings.
 
 DIGITAL SIGNATURES:
 Licensor: {{licensor}}
 Licensee: {{licensee}}
-Date: {{grantedAt}}
+Execution Date: {{grantedAt}}
+Agreement Hash: {{agreementHash}}
+Version: {{version}}

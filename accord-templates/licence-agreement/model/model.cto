@@ -11,19 +11,40 @@ asset LicenseAgreementContract extends AccordContract {
   o DateTime grantedAt
   o DateTime expiresAt
   o Integer duration
-  o Boolean commercialUse
-  o Boolean exclusiveLicense
-  o String geographicScope
-  o String fieldOfUse
-  o String[] restrictions
-  o String[] permittedUses
-  o Boolean attributionRequired
-  o String attributionText optional
-  o Boolean licenseFee
+
+  // License characteristics
+  o Boolean commercialUse default=false
+  o Boolean exclusiveLicense default=false
+  o String geographicScope default="WORLDWIDE"
+  o Boolean sublicensable default=false
+  o Boolean revocable default=false
+  o Boolean derivativesAllowed default=false
+  o Boolean viralLicense default=false
+  o Boolean translationAllowed default=false
+  o Boolean transferable default=false
+  o Boolean physicalDistribution default=false
+
+  // Usage and scope
+  o String fieldOfUse optional
+  o String[] restrictions optional
+  o String[] permittedUses optional
+
+  // Fees simplified
+  o Boolean royaltyFree default=true
   o Double licenseFeeAmount optional
   o CurrencyCode currency optional
   o String paymentTerms optional
-  o Integer terminationNoticeDays
+
+  // Attribution
+  o Boolean attributionRequired default=false
+  o String attributionText optional
+
+  // Termination
+  o Integer terminationNoticeDays default=0
+
+  // Warranties & legal defaults
+  o String warranties default="Licensor provides asset 'as-is'; no additional warranties."
+  o String liability default="Licensor not liable for any damages arising from use."
 }
 
 transaction CheckLicenseStatus {
@@ -38,7 +59,7 @@ transaction RevokeLicense {
 transaction UsageReport {
   o String usageType
   o DateTime usageDate
-  o String description
+  o String description optional
 }
 
 event LicenseValid {

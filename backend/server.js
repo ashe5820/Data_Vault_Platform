@@ -306,16 +306,26 @@ app.get('/api/assets/:assetId/ownership-deed', async (req, res) => {
 app.post('/api/assets/:assetId/license', async (req, res) => {
     try {
         const { assetId } = req.params;
-        const { regAssetID, licensee, terms, duration, commercialUse } = req.body;
+        const licenseData = req.body;
         console.log("server: You're trying to create a licence for asset w ID: ", assetId);
-        console.log("We have received from FE regAssetId: ", regAssetID);
+        console.log("We have received from FE regAssetId: ", licenseData.regAssetID);
         const license = await iprService.createLicense({
-            regAssetID,
+            regAssetID: licenseData.regAssetID,
             assetId,
-            licensee,
-            terms,
-            duration,
-            commercialUse
+            licensee: licenseData.licensee,
+            duration: licenseData.duration,
+            commercialUse: licenseData.commercialUse,
+            exclusiveLicense: licenseData.exclusiveLicense,
+            sublicensable: licenseData.sublicensable,
+            revocable: licenseData.revocable,
+            derivativesAllowed: licenseData.derivativesAllowed,
+            viralLicense: licenseData.viralLicense,
+            translationAllowed: licenseData.translationAllowed,
+            transferable: licenseData.transferable,
+            physicalDistribution: licenseData.physicalDistribution,
+            royaltyFree: licenseData.royaltyFree,
+            attributionRequired: licenseData.attributionRequired,
+            terminationNoticeDays: licenseData.terminationNoticeDays,
         });
 
         console.log("server: license granted: ", license);

@@ -24,10 +24,22 @@ const DataVaultPlatform = () => {
   const [licenses, setLicenses] = useState([]);
   const [licensesLoading, setLicensesLoading] = useState(false);
   const [licenseForm, setLicenseForm] = useState({
-    licensee: '',
-    duration: 30,
-    commercialUse: false
-  });
+        licensee: '',
+        duration: 30,
+        commercialUse: false,
+        exclusiveLicense: false,
+        sublicensable: false,
+        revocable: true,
+        derivativesAllowed: false,
+        viralLicense: false,
+        translationAllowed: false,
+        transferable: false,
+        physicalDistribution: false,
+        royaltyFree: true,
+        attributionRequired: true,
+        terminationNoticeDays: 30,
+    });
+
 
   const API_BASE = 'http://localhost:3001/api';
 
@@ -86,6 +98,22 @@ const DataVaultPlatform = () => {
             }
 
             setSelectedAsset({ ...asset, regAssetID: regAssetID});
+            setLicenseForm({
+                licensee: '',
+                duration: 30,
+                commercialUse: false,
+                exclusiveLicense: false,
+                sublicensable: false,
+                revocable: true,
+                derivativesAllowed: false,
+                viralLicense: false,
+                translationAllowed: false,
+                transferable: false,
+                physicalDistribution: false,
+                royaltyFree: true,
+                attributionRequired: true,
+                terminationNoticeDays: 30,
+            });
             setShowLicenseModal(true);
         } catch (error) {
             alert('Failed to fetch ownership deed: ' + error.message);
@@ -268,6 +296,7 @@ Generated on: ${new Date().toLocaleString()}
           alert("Asset must be registered on blockchain before creating a license.");
           return;
       }
+      console.log("HandleCreateLicense form: ", licenseForm);
 
     setLoading(true);
     try {
@@ -275,17 +304,19 @@ Generated on: ${new Date().toLocaleString()}
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            regAssetID: regAssetID, // HERE IS WHERE I NEED HELP
-          licensee: licenseForm.licensee,
-          terms: {
-            usage: 'Limited use as specified',
-            distribution: 'No redistribution',
-            attribution: 'Required',
-            modifications: 'Not allowed',
-            commercialUse: licenseForm.commercialUse
-          },
-          duration: licenseForm.duration,
-          commercialUse: licenseForm.commercialUse,
+            regAssetID: selectedAsset.regAssetID, // HERE IS WHERE I NEED HELP
+            ...licenseForm  // spreads all the advanced fields
+
+          // licensee: licenseForm.licensee,
+          // terms: {
+          //   usage: 'Limited use as specified',
+          //   distribution: 'No redistribution',
+          //   attribution: 'Required',
+          //   modifications: 'Not allowed',
+          //   commercialUse: licenseForm.commercialUse
+          // },
+          // duration: licenseForm.duration,
+          // commercialUse: licenseForm.commercialUse,
 
         })
       });

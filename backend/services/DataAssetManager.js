@@ -18,7 +18,61 @@ class DataAssetManager {
      * @param {Object} params.metadata - Metadata object
      * @returns {Promise<string>} - IPFS path / CID
      */
+
     async uploadAsset({ data, metadata }) {
+        console.log("DAM : Starting uploadAsset");
+        console.log("DAM : Metadata:", metadata);
+
+        try {
+            // DATA NORMALISATION
+            // Converts various input types (file buffers, objects, strings) into a consistent string format
+            // so it can be uniformly encrypted. Binary data is converted to a Base64 string.
+            let stringData;
+            if (Buffer.isBuffer(data)) {
+                stringData = data.toString('base64');
+            } else if (typeof data === 'object') {
+                stringData = JSON.stringify(data);
+            } else {
+                stringData = data; // assume string
+            }
+
+            // Encrypt the data
+            const encryptionKey = CryptoJS.lib.WordArray.random(256 / 8).toString();    // 32 byte
+            const encryptedData = CryptoJS.AES.encrypt(stringData, encryptionKey).toString();
+
+            // Prepare IPFS payload
+            const assetObject = {
+                encryptedData,  // The unreadable ciphertext
+                // encryptionKey,   // The key used for encryption
+                metadata,
+                timestamp: new Date().toISOString()
+            };
+
+            let licenseId = null;
+            if (metadata.type === 'license') {
+                console.log("DAM : Detected license, storing license metadata ...");
+                licenseId = await this.storeLicenseMetadata(metadata);
+                console.log("DAM : License metadata stored with ID:", licenseId);
+            }
+
+            // Convert JSON payload to Blob or Buffer
+            const payload = Buffer.from(JSON.stringify(assetObject));
+            console.log("DAM : Uploading payload to IPFS ...");
+
+            // Upload to IPFS via ipfs-http-client
+            const result = await this.ipfs.add(JSON.stringify(assetObject), { duplex: "half" });
+
+            console.log("DAM : Upload successful. IPFS path:", result.path);
+            return result.path;
+
+        } catch (error) {
+            console.error("DAM : Failed to upload to IPFS:", error);
+            throw new Error(`DAM : Failed to upload to IPFS: ${error.message}`);
+        }
+    }
+
+
+    async uploadLicense({ data, metadata }) {
         console.log("DAM : Starting uploadAsset");
         console.log("DAM : Metadata:", metadata);
 
@@ -62,7 +116,10 @@ class DataAssetManager {
             const result = await this.ipfs.add(JSON.stringify(assetObject), { duplex: "half" });
 
             console.log("DAM : Upload successful. IPFS path:", result.path);
-            return result.path; // Returns IPFS hash
+            return {
+                ipfsPath: result.path, // the hash
+                licenseId: licenseId
+            };
 
         } catch (error) {
             console.error("DAM : Failed to upload to IPFS:", error);

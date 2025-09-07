@@ -73,56 +73,76 @@ class IPRService {
         return odMetadata;
     }
 
-    async createLicense({ regAssetID, assetId, licensee, terms, duration, commercialUse }) {
-        console.log("IPRS: You want a licence? Let's first get the metadata of this asset ...");
+    async createLicense({ regAssetID, assetId, licensee, duration, commercialUse = false }) {
+        console.log("IPRS: Fetching metadata for asset:", assetId);
         const asset = await this.dataAssetManager.getAssetMetadata(assetId);
         if (!asset) {
             throw new Error('Asset not found');
         }
-        console.log("IPRService: DAM found the metadata !");
+        console.log("IPRService: DAM found the metadata!");
+
+        // Prepare license data with defaults
+        const now = new Date();
         const licenseData = {
             assetId,
             licensor: asset.userId,
             licensee,
-            terms,
             duration,
             commercialUse,
-            grantedAt: new Date().toISOString(),
-            expiresAt: new Date(Date.now() + duration * 24 * 60 * 60 * 1000).toISOString()
+            grantedAt: now.toISOString(),
+            expiresAt: new Date(now.getTime() + duration * 24 * 60 * 60 * 1000).toISOString(),
+
+            // License characteristics (defaults)
+            exclusiveLicense: false,
+            geographicScope: "WORLDWIDE",
+            sublicensable: false,
+            revocable: false,
+            derivativesAllowed: false,
+            viralLicense: false,
+            translationAllowed: false,
+            transferable: false,
+            physicalDistribution: false,
+            royaltyFree: true,
+            attributionRequired: false,
+            terminationNoticeDays: 0
         };
 
-        // Create license document
-        console.log("IPRService: Asking the SLCEngine to create a licence doc ...");
+        // Create license document via SLCEngine
+        console.log("IPRService: Generating license document ...");
         const licenseDoc = await this.slcEngine.fillAndValidateTemplate({
             templateType: 'license-agreement',
             data: licenseData
         });
 
-        // Upload license to IPFS
-        console.log("IPRService: Uploading the licence doc ...");
-        const licenseIPFS = await this.dataAssetManager.uploadAsset({
-            data: JSON.stringify(licenseDoc),
+        // Upload license to IPFS and store metadata
+        console.log("IPRService: Uploading license to IPFS ...");
+        const { ipfsPath, licenseId } = await this.dataAssetManager.uploadLicense({
+            data: licenseDoc,
             metadata: {
                 type: 'license',
                 assetId: assetId,
                 licensee: licensee
             }
         });
-        console.log("IPRService: Registering the licence on BC ...");
+
+        console.log("IPRService: License uploaded. IPFS:", ipfsPath, "License ID:", licenseId);
+
         // Register license on blockchain
-        const termsHash = this.slcEngine.hashTerms(terms);
-        console.log("IPRService: Asking BCService to grant licence for regAssetID: ", regAssetID);
+        const termsHash = this.slcEngine.hashTerms(JSON.stringify(licenseDoc)); // hash entire licenseDoc
+        console.log("IPRService: Registering license on blockchain for regAssetID:", regAssetID);
         await this.blockchainService.grantLicense({
             regAssetID,
             assetId,
             licensee,
             termsHash,
-            licenseIPFS,
+            licenseIPFS: ipfsPath,
+            licenseId,
             expiresAt: Math.floor(new Date(licenseData.expiresAt).getTime() / 1000)
         });
 
         return licenseDoc;
     }
+
 
     async requestAccess({ assetId, requesterId, purpose, duration }) {
         const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
