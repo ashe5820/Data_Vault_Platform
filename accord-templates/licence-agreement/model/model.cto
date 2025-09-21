@@ -15,7 +15,7 @@ asset LicenseAgreementContract extends AccordContract {
   // License characteristics
   o Boolean commercialUse default=false
   o Boolean exclusiveLicense default=false
-  o String geographicScope default="WORLDWIDE"
+  o String geographicScope default="AUSTRALIA"
   o Boolean sublicensable default=false
   o Boolean revocable default=false
   o Boolean derivativesAllowed default=false

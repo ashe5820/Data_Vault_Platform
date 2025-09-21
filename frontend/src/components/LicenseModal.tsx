@@ -16,15 +16,17 @@ interface LicenseForm {
     royaltyFree: boolean;
     attributionRequired: boolean;
     terminationNoticeDays: number;
+    additionalJurisdictions: string[]; // ✅ New field
 }
 
 interface LicenseModalProps {
     isOpen: boolean;
     selectedAsset: any;
     loading: boolean;
-    onFormChange: (field: keyof LicenseForm, value: string | number | boolean) => void;
+    onFormChange: (field: keyof LicenseForm, value: string | number | boolean | string[]) => void;
     onCreate: () => void;
     onClose: () => void;
+    onDownload: () => void;
 }
 
 const defaultLicenseForm: LicenseForm = {
@@ -42,7 +44,22 @@ const defaultLicenseForm: LicenseForm = {
     royaltyFree: true,
     attributionRequired: false,
     terminationNoticeDays: 0,
+    additionalJurisdictions: [], // ✅ New field
 };
+
+// ✅ Main jurisdictions (10 countries)
+const MAIN_JURISDICTIONS = [
+    "United Kingdom",
+    "Canada",
+    "Australia",
+    "Germany",
+    "France",
+    "Japan",
+    "China",
+    "Brazil",
+    "India",
+    "Mexico"
+];
 
 const LicenseModal: React.FC<LicenseModalProps> = ({
                                                        isOpen,
@@ -53,18 +70,26 @@ const LicenseModal: React.FC<LicenseModalProps> = ({
                                                        onClose,
                                                    }) => {
     const [advancedOpen, setAdvancedOpen] = useState(false);
-    const [formData, setFormData] = useState<LicenseForm>(defaultLicenseForm); // ✅ Add local state
+    const [jurisdictionsOpen, setJurisdictionsOpen] = useState(false);
+    const [formData, setFormData] = useState<LicenseForm>(defaultLicenseForm);
 
-    // Handle form changes locally and propagate to parent
-    const handleFormChange = (field: keyof LicenseForm, value: string | number | boolean) => {
-        setFormData(prev => ({ ...prev, [field]: value })); // ✅ Update local state
-        onFormChange(field, value); // ✅ Notify parent
+    const handleFormChange = (field: keyof LicenseForm, value: string | number | boolean | string[]) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        onFormChange(field, value);
     };
 
-    // Reset form when modal closes
+    const handleJurisdictionChange = (jurisdiction: string, isChecked: boolean) => {
+        const updatedJurisdictions = isChecked
+            ? [...formData.additionalJurisdictions, jurisdiction]
+            : formData.additionalJurisdictions.filter(j => j !== jurisdiction);
+
+        handleFormChange("additionalJurisdictions", updatedJurisdictions);
+    };
+
     React.useEffect(() => {
         if (!isOpen) {
-            setFormData(defaultLicenseForm); // ✅ Reset form when modal closes
+            setFormData(defaultLicenseForm);
+            setJurisdictionsOpen(false);
         }
     }, [isOpen]);
 
@@ -79,7 +104,7 @@ const LicenseModal: React.FC<LicenseModalProps> = ({
                     <div className="mb-4 p-3 bg-gray-50 rounded-md">
                         <p className="text-sm font-medium">For: {selectedAsset.assetName}</p>
                         <p className="text-xs text-gray-600 mt-1">
-                            Default rights: Non-exclusive, irrevocable, worldwide, royalty-free, no derivatives, no transfer.
+                            Default jurisdiction: United States
                         </p>
                     </div>
                 )}
@@ -90,8 +115,8 @@ const LicenseModal: React.FC<LicenseModalProps> = ({
                         <label className="block text-sm font-medium text-gray-700 mb-1">Licensee Address</label>
                         <input
                             type="text"
-                            value={formData.licensee} // ✅ Use local state
-                            onChange={(e) => handleFormChange("licensee", e.target.value)} // ✅ Use local handler
+                            value={formData.licensee}
+                            onChange={(e) => handleFormChange("licensee", e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md"
                             placeholder="0x..."
                             disabled={loading}
@@ -102,8 +127,8 @@ const LicenseModal: React.FC<LicenseModalProps> = ({
                         <label className="block text-sm font-medium text-gray-700 mb-1">Duration (days)</label>
                         <input
                             type="number"
-                            value={formData.duration} // ✅ Use local state
-                            onChange={(e) => handleFormChange("duration", parseInt(e.target.value) || 0)} // ✅ Use local handler
+                            value={formData.duration}
+                            onChange={(e) => handleFormChange("duration", parseInt(e.target.value) || 0)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md"
                             disabled={loading}
                             min={1}
@@ -114,13 +139,51 @@ const LicenseModal: React.FC<LicenseModalProps> = ({
                         <label className="flex items-center">
                             <input
                                 type="checkbox"
-                                checked={formData.commercialUse} // ✅ Use local state
-                                onChange={(e) => handleFormChange("commercialUse", e.target.checked)} // ✅ Use local handler
+                                checked={formData.commercialUse}
+                                onChange={(e) => handleFormChange("commercialUse", e.target.checked)}
                                 className="mr-2"
                                 disabled={loading}
                             />
                             <span className="text-sm">Allow commercial use</span>
                         </label>
+                    </div>
+
+                    {/* Additional Jurisdictions */}
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => setJurisdictionsOpen(!jurisdictionsOpen)}
+                            className="flex items-center text-sm text-blue-500 underline mb-2"
+                        >
+                            {jurisdictionsOpen ? "Hide Additional Jurisdictions" : "Show Additional Jurisdictions"}
+                        </button>
+
+                        {jurisdictionsOpen && (
+                            <div className="border rounded-md p-3 bg-gray-50">
+                                <p className="text-sm font-medium mb-2 text-gray-700">
+                                    Add jurisdictions (default: United States)
+                                </p>
+                                <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {MAIN_JURISDICTIONS.map((jurisdiction) => (
+                                        <label key={jurisdiction} className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.additionalJurisdictions.includes(jurisdiction)}
+                                                onChange={(e) => handleJurisdictionChange(jurisdiction, e.target.checked)}
+                                                className="mr-2"
+                                                disabled={loading}
+                                            />
+                                            <span className="text-sm">{jurisdiction}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {formData.additionalJurisdictions.length > 0 && (
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Selected: {formData.additionalJurisdictions.join(", ")}
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -152,8 +215,8 @@ const LicenseModal: React.FC<LicenseModalProps> = ({
                                     type="checkbox"
                                     className="mr-2"
                                     disabled={loading}
-                                    checked={formData[option.key as keyof LicenseForm] as boolean} // ✅ Use local state
-                                    onChange={(e) => handleFormChange(option.key as keyof LicenseForm, e.target.checked)} // ✅ Use local handler
+                                    checked={formData[option.key as keyof LicenseForm] as boolean}
+                                    onChange={(e) => handleFormChange(option.key as keyof LicenseForm, e.target.checked)}
                                 />
                                 <span className="text-sm">{option.label}</span>
                             </label>
@@ -165,8 +228,8 @@ const LicenseModal: React.FC<LicenseModalProps> = ({
                                 </label>
                                 <input
                                     type="number"
-                                    value={formData.terminationNoticeDays} // ✅ Use local state
-                                    onChange={(e) => handleFormChange("terminationNoticeDays", parseInt(e.target.value) || 0)} // ✅ Use local handler
+                                    value={formData.terminationNoticeDays}
+                                    onChange={(e) => handleFormChange("terminationNoticeDays", parseInt(e.target.value) || 0)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                                     disabled={loading}
                                     min={0}
@@ -180,7 +243,7 @@ const LicenseModal: React.FC<LicenseModalProps> = ({
                 <div className="mt-6 flex gap-3">
                     <button
                         onClick={onCreate}
-                        disabled={loading || !formData.licensee || !selectedAsset} // ✅ Use local state
+                        disabled={loading || !formData.licensee || !selectedAsset}
                         className="flex-1 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loading ? "Creating..." : "Create License"}

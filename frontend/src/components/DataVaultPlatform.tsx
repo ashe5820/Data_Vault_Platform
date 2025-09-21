@@ -38,6 +38,7 @@ const DataVaultPlatform = () => {
         royaltyFree: true,
         attributionRequired: true,
         terminationNoticeDays: 30,
+        additionalJurisdictions: [],
     });
 
 
@@ -113,6 +114,7 @@ const DataVaultPlatform = () => {
                 royaltyFree: true,
                 attributionRequired: true,
                 terminationNoticeDays: 30,
+                additionalJurisdictions: ['Australia', 'United Kingdom', 'France'],
             });
             setShowLicenseModal(true);
         } catch (error) {
@@ -159,6 +161,102 @@ const DataVaultPlatform = () => {
       setLoading(false);
     }
   };
+
+  const handleDownloadLicense = (license: License) => {
+        if (!license) return;
+
+        // Create a formatted text version of the license
+        const licenseContent = `
+DIGITAL ASSET LICENSE AGREEMENT
+===============================
+
+License Information:
+-------------------
+License ID: ${license.id}
+Asset ID: ${license.assetId}
+Asset Name: ${license.assetName || `Asset ${license.assetId}`}
+License Status: ${license.status}
+
+Parties:
+--------
+Licensor: ${license.licensor || 'Demo User'}
+Licensee: ${license.licensee}
+
+Term Details:
+-------------
+License Duration: ${license.duration} days
+Effective Date: ${new Date(license.createdAt).toLocaleDateString()}
+Expiration Date: ${formatDate(license.expiresAt)}
+Commercial Use: ${license.commercialUse ? 'Permitted' : 'Not Permitted'}
+
+Jurisdictions:
+--------------
+Primary Jurisdiction: United States
+Additional Jurisdictions: Brazil, Australia, United Kingdom, France, Germany
+
+License Terms:
+--------------
+Exclusive License: ${license.exclusiveLicense ? 'Yes' : 'No'}
+Sublicensable: ${license.sublicensable ? 'Yes' : 'No'}
+Revocable: ${license.revocable ? 'Yes' : 'No'}
+Derivatives Allowed: ${license.derivativesAllowed ? 'Yes' : 'No'}
+Viral License: ${license.viralLicense ? 'Yes' : 'No'}
+Translation Allowed: ${license.translationAllowed ? 'Yes' : 'No'}
+Transferable: ${license.transferable ? 'Yes' : 'No'}
+Physical Distribution: ${license.physicalDistribution ? 'Yes' : 'No'}
+Royalty Free: ${license.royaltyFree ? 'Yes' : 'No'}
+Attribution Required: ${license.attributionRequired ? 'Yes' : 'No'}
+Termination Notice: ${license.terminationNoticeDays} days
+
+Blockchain Verification:
+------------------------
+Transaction Hash: ${license.transactionHash || 'Pending...'}
+Created At: ${new Date(license.createdAt).toLocaleString()}
+
+Terms and Conditions:
+---------------------
+1. This license grants the Licensee non-exclusive rights to use the digital asset.
+2. All usage must comply with the specified jurisdictions and terms.
+3. Commercial use is ${license.commercialUse ? 'permitted' : 'prohibited'} unless otherwise stated.
+4. The license is ${license.revocable ? 'revocable' : 'irrevocable'} with ${license.terminationNoticeDays} days notice.
+5. All derivative works must maintain original attribution if required.
+
+Digital Signature:
+------------------
+Licensor Signature: ${currentUser.address.slice(0, 8)}...${license.licensee.slice(-6)}
+Licensee Signature: ${license.licensee.slice(0, 8)}...${license.licensee.slice(-6)}
+Timestamp: ${new Date(license.createdAt).toISOString()}
+
+===============================
+This license agreement has been recorded on the blockchain for immutable verification.
+Generated on: ${new Date().toLocaleString()}
+    `;
+
+        // Create and download the file
+        const blob = new Blob([licenseContent], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `license-agreement-${license.id}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    };
+
+// Helper function to format dates (you can reuse your existing formatDate function)
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString();
+    };
+
+// Helper function to format file size (if needed for assets)
+    const formatFileSize = (bytes: number) => {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
 
   const handleRegisterOwnership = async (assetId) => {
     setLoading(true);
@@ -307,17 +405,6 @@ Generated on: ${new Date().toLocaleString()}
             regAssetID: selectedAsset.regAssetID, // HERE IS WHERE I NEED HELP
             ...licenseForm  // spreads all the advanced fields
 
-          // licensee: licenseForm.licensee,
-          // terms: {
-          //   usage: 'Limited use as specified',
-          //   distribution: 'No redistribution',
-          //   attribution: 'Required',
-          //   modifications: 'Not allowed',
-          //   commercialUse: licenseForm.commercialUse
-          // },
-          // duration: licenseForm.duration,
-          // commercialUse: licenseForm.commercialUse,
-
         })
       });
       console.log("📡 Response status:", response.status, response.statusText);
@@ -402,6 +489,7 @@ Generated on: ${new Date().toLocaleString()}
                 licenses={licenses}
                 isLoading={licensesLoading}
                 onRevokeLicense={handleRevokeLicense} // Optional: if you added the revoke handler
+                onDownloadLicense={handleDownloadLicense}
             />
         )}
 
@@ -430,6 +518,7 @@ Generated on: ${new Date().toLocaleString()}
           }))}
           onCreate={handleCreateLicense}
           onClose={() => setShowLicenseModal(false)}
+          onDownload = {handleDownloadLicense}
         />}
 
 </div>
