@@ -286,6 +286,7 @@ Generated on: ${new Date().toLocaleString()}
       if (result.success) {
           // result.regAssetId is the blockchain asset ID returned from backend
           setRegistrationStatus('Ownership Deed registered on blockchain! ✓');
+          console.log("Register success: ", result);
         await loadUserAssets();
         setTimeout(() => {
           setRegistrationStatus('');
@@ -311,9 +312,11 @@ Generated on: ${new Date().toLocaleString()}
           ...data.ownershipDeed,
           asset: {
               ...asset,
-              regAssetId: asset.regAssetId || data.ownershipDeed.regAssetID
+              regAssetId: asset.regAssetId || data.ownershipDeed.regAssetID,
 
-          }
+
+          },
+            transactionHash: asset.transactionHash || data.ownershipDeed.odDocument.hash,
         });
         setShowDeedModal(true);
       } else {
@@ -415,7 +418,7 @@ Generated on: ${new Date().toLocaleString()}
         console.log("✅ License created successfully");
         alert('License created successfully!');
         setShowLicenseModal(false);
-        setLicenseForm({ licensee: '', duration: 30, commercialUse: false });
+        setLicenseForm({ licensee: '', duration: 21, commercialUse: false });
         await loadUserLicenses(); // Add this line to refresh licenses
 
       }

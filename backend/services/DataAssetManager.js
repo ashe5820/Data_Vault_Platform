@@ -204,6 +204,7 @@ class DataAssetManager {
     async saveODMetadata({ assetId, odDocument, transactionHash, blockNumber, regAssetID }) {
         console.log("DAM: saving given OD metadata ...")
         console.log("DAM: we have received regAssetID value: ", regAssetID);
+        console.log("DAM: we have received transactionHash: ", transactionHash);
         this.odMetadata.set(assetId, {
             odDocument,
             transactionHash,
@@ -218,11 +219,13 @@ class DataAssetManager {
         if (asset) {
             asset.status = 'registered';
             asset.transactionHash = transactionHash;
+            console.log("DAM: transaction hash:", transactionHash);
         }
     }
 
     async getODMetadata(assetId) {
-        return this.odMetadata.get(assetId);
+        return {ODMetaData: this.odMetadata.get(assetId),
+            transactionHash: this.assets.get(assetId).transactionHash};
     }
 
     printAllContents() {

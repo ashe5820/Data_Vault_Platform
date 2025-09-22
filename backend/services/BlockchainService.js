@@ -3,23 +3,6 @@ const IPRightsRegistryABI = require('../contracts/IPRightsRegistry.json');  // l
 
 
 class BlockchainService {
-// ========== MOCK constructor() ========
-
-    // constructor(wallet, contractAddress) {
-    //     this.mockMode = !contractAddress || contractAddress === 'mock';
-    //     if (this.mockMode) {
-    //         console.log('🔧 BlockchainService running in MOCK mode');
-    //         this.mockData = new Map();
-    //         this.assetCounter = 0;
-    //     } else {
-    //         this.wallet = wallet;
-    //         this.contract = new ethers.Contract(
-    //             contractAddress,
-    //             IPRightsRegistryABI.abi,
-    //             wallet
-    //         );
-    //     }
-    // }
 
     constructor(wallet, contractAddress) {
         this.wallet = wallet;

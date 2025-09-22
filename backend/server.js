@@ -250,6 +250,8 @@ app.post('/api/assets/:assetId/register', async (req, res) => {
             templateType: 'ownership-deed',
             data: odInstance
         });
+        console.log("FINAL FILLED TEMPLATE:", JSON.stringify(validatedOD.template, null, 2));
+
 
         // Step 4: Notarize on blockchain
         console.log("This is the validated OD");
@@ -260,7 +262,8 @@ app.post('/api/assets/:assetId/register', async (req, res) => {
             odDocument: validatedOD,
             ipfsHash: assetMetadata.ipfsHash
         });
-        console.log("IPRService: we have received regAssetID: ", notarizationResult.regAssetID);
+        console.log("Server: we have received regAssetID: ", notarizationResult.regAssetID);
+        console.log("Server: we have received notarization result: ", notarizationResult);
 
         // Step 5: Save OD metadata
         await dataAssetManager.saveODMetadata({
@@ -292,7 +295,7 @@ app.get('/api/assets/:assetId/ownership-deed', async (req, res) => {
     try {
         const od = await iprService.getOwnershipDeed(req.params.assetId);
         console.log("server: IPRService retrieved OD: ", od);
-        res.json({ ownershipDeed: od });
+        res.json({ ownershipDeed: od.odMetadata, transactionHash: od.transactionHash });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -309,7 +312,7 @@ app.post('/api/assets/:assetId/license', async (req, res) => {
         const licenseData = req.body;
         console.log("server: You're trying to create a licence for asset w ID: ", assetId);
         console.log("We have received from FE regAssetId: ", licenseData.regAssetID);
-        const license = await iprService.createLicense({
+        const result = await iprService.createLicense({
             regAssetID: licenseData.regAssetID,
             assetId,
             licensee: licenseData.licensee,
@@ -328,11 +331,15 @@ app.post('/api/assets/:assetId/license', async (req, res) => {
             terminationNoticeDays: licenseData.terminationNoticeDays,
         });
 
+        const license = result.licenseDoc;
+        const blockchainRes = result.blockchainRes;
+
         console.log("server: license granted: ", license);
 
         res.json({
             success: true,
-            license,
+            license: license,
+            blockchainRes: blockchainRes,
             message: 'License created successfully'
         });
     } catch (error) {

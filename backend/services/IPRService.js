@@ -54,7 +54,7 @@ class IPRService {
             console.log("Registered Asset ID: ", txResult.regAssetId);
 
             return {
-                transactionHash: txResult.hash,
+                transactionHash: txResult.receiptHash,
                 blockNumber: txResult.blockNumber,
                 odIPFSHash: odIPFSResult,
                 termsHash: termsHash,
@@ -66,11 +66,14 @@ class IPRService {
     }
 
     async getOwnershipDeed(assetId) {
-        const odMetadata = await this.dataAssetManager.getODMetadata(assetId);
+        const result = await this.dataAssetManager.getODMetadata(assetId);
+        const odMetadata = result.ODMetaData;
+        const transactionHash = result.transactionHash
+        console.log("IPRService: retrieved ODMetaData: ", odMetadata);
         if (!odMetadata) {
             throw new Error('Ownership deed not found');
         }
-        return odMetadata;
+        return {odMetadata: odMetadata, transactionHash: transactionHash};
     }
 
     async createLicense({ regAssetID, assetId, licensee, duration, commercialUse = false }) {
@@ -113,9 +116,12 @@ class IPRService {
             templateType: 'license-agreement',
             data: licenseData
         });
+        console.log("FINAL FILLED TEMPLATE:", JSON.stringify(licenseDoc.template, null, 2));
+
 
         // Upload license to IPFS and store metadata
         console.log("IPRService: Uploading license to IPFS ...");
+
         const { ipfsPath, licenseId } = await this.dataAssetManager.uploadLicense({
             data: licenseDoc,
             metadata: {
@@ -130,7 +136,7 @@ class IPRService {
         // Register license on blockchain
         const termsHash = this.slcEngine.hashTerms(JSON.stringify(licenseDoc)); // hash entire licenseDoc
         console.log("IPRService: Registering license on blockchain for regAssetID:", regAssetID);
-        await this.blockchainService.grantLicense({
+        const txResult = await this.blockchainService.grantLicense({
             regAssetID,
             assetId,
             licensee,
@@ -139,8 +145,10 @@ class IPRService {
             licenseId,
             expiresAt: Math.floor(new Date(licenseData.expiresAt).getTime() / 1000)
         });
+        const blockchainRes = {blockHash: txResult.blockHash, blockNumber: txResult.blockNumber};
+        console.log("IPRServce: Blockchain: ", blockchainRes);
 
-        return licenseDoc;
+        return {licenseDoc: licenseDoc, blockchainRes: blockchainRes};
     }
 
 
